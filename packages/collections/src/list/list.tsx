@@ -1,11 +1,11 @@
+import {AnimatePresence, motion} from "framer-motion";
 import i18next from "i18next";
 import {action, autorun, comparer, computed, IObservableArray, IReactionDisposer, observable, reaction} from "mobx";
 import {disposeOnUnmount, observer} from "mobx-react";
 import * as React from "react";
-import posed, {Transition} from "react-pose";
 
 import {ListStoreBase} from "@focus4/stores";
-import {CSSProp, defaultPose, getIcon, themr} from "@focus4/styling";
+import {CSSProp, defaultTransition, getIcon, themr, useTheme} from "@focus4/styling";
 import {FontIcon, IconButton} from "@focus4/toolbox";
 
 import {OperationListItem} from "./contextual-actions";
@@ -326,7 +326,7 @@ export class List<T, P extends ListProps<T> = ListProps<T> & {data: T[]}> extend
                                             {i18next.t(`${i18nPrefix}.list.add`)}
                                         </li>
                                     ) : null}
-                                    {DetailComponent ? <Transition>{this.lines}</Transition> : this.lines}
+                                    {DetailComponent ? <AnimatePresence>{this.lines}</AnimatePresence> : this.lines}
                                 </ul>
                             )}
                             {/* Gestion de l'affichage du chargement. */}
@@ -374,63 +374,47 @@ interface DetailWrapperProps {
 }
 
 /** Wrapper pour le composant de détail. */
-const DetailWrapper: React.ComponentType<DetailWrapperProps> = posed(
-    React.forwardRef(
-        (
-            {
-                displayedIdx,
-                mode,
-                mosaic,
-                isAddItemShown,
-                byLine,
-                DetailComponent,
-                closeDetail,
-                item,
-                theme: pTheme
-            }: DetailWrapperProps,
-            ref: React.Ref<HTMLLIElement>
-        ) => (
-            <Theme theme={pTheme}>
-                {theme => (
-                    <li ref={ref} className={theme.detailWrapper()}>
-                        {/* Le calcul de la position du triangle en mosaïque n'est pas forcément évident...
+function DetailWrapper({
+    displayedIdx,
+    mode,
+    mosaic,
+    isAddItemShown,
+    byLine,
+    DetailComponent,
+    closeDetail,
+    item,
+    theme: pTheme
+}: DetailWrapperProps) {
+    const theme = useTheme("list", listCss, pTheme);
+    return (
+        <motion.li
+            className={theme.detailWrapper()}
+            initial={{overflow: "hidden", height: 0}}
+            animate={{overflow: "hidden", height: "auto", transitionEnd: {overflow: "visible"}}}
+            exit={{overflow: "hidden", height: 0}}
+            transition={defaultTransition}
+        >
+            {/* Le calcul de la position du triangle en mosaïque n'est pas forcément évident...
                         et il suppose qu'on ne touche pas au marges par défaut entre les mosaïques. */}
-                        <div
-                            className={theme.triangle()}
-                            style={
-                                displayedIdx === undefined && mode === "mosaic"
-                                    ? {left: -1000}
-                                    : mode === "mosaic"
-                                    ? {
-                                          left:
-                                              mosaic.width / 2 -
-                                              8.25 +
-                                              ((displayedIdx! + (isAddItemShown ? 1 : 0)) % byLine) *
-                                                  (mosaic.width + 10)
-                                      }
-                                    : {}
-                            }
-                        />
-                        <div className={theme.detail()}>
-                            <IconButton icon="clear" onClick={closeDetail} />
-                            <DetailComponent data={item} closeDetail={closeDetail} />
-                        </div>
-                    </li>
-                )}
-            </Theme>
-        )
-    )
-)({
-    enter: {
-        applyAtStart: {overflow: "hidden"},
-        applyAtEnd: {overflow: "visible"},
-        height: "auto",
-        ...defaultPose
-    },
-    exit: {
-        applyAtStart: {overflow: "hidden"},
-        applyAtEnd: {overflow: "visible"},
-        height: 0,
-        ...defaultPose
-    }
-});
+            <div
+                className={theme.triangle()}
+                style={
+                    displayedIdx === undefined && mode === "mosaic"
+                        ? {left: -1000}
+                        : mode === "mosaic"
+                        ? {
+                              left:
+                                  mosaic.width / 2 -
+                                  8.25 +
+                                  ((displayedIdx! + (isAddItemShown ? 1 : 0)) % byLine) * (mosaic.width + 10)
+                          }
+                        : {}
+                }
+            />
+            <div className={theme.detail()}>
+                <IconButton icon="clear" onClick={closeDetail} />
+                <DetailComponent data={item} closeDetail={closeDetail} />
+            </div>
+        </motion.li>
+    );
+}

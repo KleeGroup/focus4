@@ -1,12 +1,12 @@
+import {motion} from "framer-motion";
 import {action, computed, IObservableArray, observable} from "mobx";
 import {observer} from "mobx-react";
 import * as React from "react";
 import {ConnectDragPreview, ConnectDragSource} from "react-dnd";
 import {getEmptyImage} from "react-dnd-html5-backend";
-import posed from "react-pose";
 
 import {EntityField, FieldEntry, ListStoreBase, stringFor} from "@focus4/stores";
-import {CSSProp, getIcon, springPose, themr} from "@focus4/styling";
+import {CSSProp, getIcon, springTransition, themr} from "@focus4/styling";
 import {IconButton} from "@focus4/toolbox";
 
 import {ContextualActions, OperationListItem} from "./contextual-actions";
@@ -47,8 +47,6 @@ export interface LineWrapperProps<T> {
     LineComponent: React.ComponentType<LineProps<T> & {ref?: React.Ref<any>}>;
     /** Configuration de la mosaïque (si applicable). */
     mosaic?: {width: number; height: number};
-    /** Fonction passée par react-pose qu'il faudra appeler au willUnmount pour qu'il retire l'élément du DOM. */
-    onPoseComplete?: (pose: string) => void;
     /** Actions de ligne. */
     operationList?: (data: T) => OperationListItem<T>[];
     /** Store de liste associé à la ligne. */
@@ -71,14 +69,6 @@ export class LineWrapper<T> extends React.Component<LineWrapperProps<T>> {
         // Permet de masquer la preview par défaut de drag and drop HTML5.
         if (this.props.connectDragPreview) {
             this.props.connectDragPreview(getEmptyImage() as any);
-        }
-    }
-
-    componentWillReceiveProps({onPoseComplete}: LineWrapperProps<T>) {
-        // Si on n'appelle pas ça, vu que la ligne est posée dans un contexte de transition react-pose à cause du détail,
-        // la ligne ne sera jamais retirée du DOM.
-        if (onPoseComplete) {
-            onPoseComplete("exit");
         }
     }
 
@@ -180,12 +170,24 @@ export class LineWrapper<T> extends React.Component<LineWrapperProps<T>> {
                 return (
                     <Theme theme={this.props.theme}>
                         {theme => (
-                            <DraggableLi
+                            <motion.li
                                 className={(mosaic ? theme.mosaic : theme.line)({selected: this.isSelected})}
                                 ref={this.setRef}
-                                pose={this.isDragged && !disableDragAnimation ? "dragging" : "idle"}
-                                width={mosaic && mosaic.width}
-                                height={mosaic && mosaic.height}
+                                initial={false}
+                                animate={this.isDragged && !disableDragAnimation ? "dragging" : "idle"}
+                                exit={{}}
+                                variants={{
+                                    dragging: {
+                                        width: mosaic && mosaic.width ? 0 : undefined,
+                                        height: 0
+                                    },
+                                    idle: {
+                                        width: (mosaic && mosaic.width) || "100%",
+                                        height: (mosaic && mosaic.height) || "auto"
+                                    }
+                                }}
+                                transition={springTransition}
+                                style={{opacity: this.isDragged && !disableDragAnimation ? 0 : 1}}
                             >
                                 <LineComponent data={data} toggleDetail={toggleDetail} />
                                 {this.isSelectable ? (
@@ -213,27 +215,10 @@ export class LineWrapper<T> extends React.Component<LineWrapperProps<T>> {
                                         />
                                     </div>
                                 ) : null}
-                            </DraggableLi>
+                            </motion.li>
                         )}
                     </Theme>
                 );
         }
     }
 }
-
-/** On construit un <li> "draggable". */
-const DraggableLi = posed.li({
-    props: {width: undefined, height: undefined},
-    dragging: {
-        applyAtStart: {opacity: 0},
-        width: ({width}: {width?: number}) => (width ? 0 : undefined),
-        height: 0,
-        ...springPose
-    },
-    idle: {
-        applyAtStart: {opacity: 1},
-        width: ({width}: {width?: number}) => width || "100%",
-        height: ({height}: {height?: number}) => height || "auto",
-        ...springPose
-    }
-});

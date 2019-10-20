@@ -1,3 +1,4 @@
+import {HTMLMotionProps} from "framer-motion";
 import * as React from "react";
 
 export interface PanelDescriptor {
@@ -19,7 +20,7 @@ export const ScrollableContext = React.createContext<{
      * Met à jour les props du header dans le Scrollable
      * @param headerProps Les props du composant de header.
      */
-    setHeaderProps(headerProps: React.HTMLProps<HTMLElement>): void;
+    setHeaderProps(headerProps: HTMLMotionProps<"header">): void;
     /**
      * Enregistre un observateur d'intersection avec le viewport du Scrollable.
      * @param node Le noeud DOM à observer.

@@ -1,17 +1,18 @@
 import "intersection-observer";
 
 import classNames from "classnames";
+import {AnimatePresence, HTMLMotionProps} from "framer-motion";
 import {debounce, memoize, range} from "lodash";
 import {action, autorun, computed, observable} from "mobx";
-import {disposeOnUnmount, observer, Observer} from "mobx-react";
-import {ColdSubscription, spring, styler} from "popmotion";
+import {disposeOnUnmount, observer} from "mobx-react";
+import {useObserver} from "mobx-react-lite";
+import {ColdSubscription, spring} from "popmotion";
 import * as React from "react";
 import {createPortal, findDOMNode} from "react-dom";
-import {Transition} from "react-pose";
 import ResizeObserverPolyfill from "resize-observer-polyfill";
-import {Styler} from "stylefire";
+import styler, {Styler} from "stylefire";
 
-import {CSSProp, ScrollableContext, springPose, themr} from "@focus4/styling";
+import {CSSProp, ScrollableContext, springTransition, themr} from "@focus4/styling";
 
 import {ButtonBackToTop} from "./button-back-to-top";
 export {ButtonBttCss, buttonBttCss} from "./button-back-to-top";
@@ -49,7 +50,7 @@ class ScrollableComponent extends React.Component<ScrollableProps> {
         nonStickyElement: HTMLElement;
         canDeploy: boolean;
     };
-    @observable.ref headerProps?: React.HTMLProps<HTMLElement>;
+    @observable.ref headerProps?: HTMLMotionProps<"header">;
     @observable.ref containerNode!: HTMLDivElement;
     @observable.ref scrollableNode!: HTMLDivElement;
     @observable.ref stickyNode!: HTMLDivElement;
@@ -96,7 +97,7 @@ class ScrollableComponent extends React.Component<ScrollableProps> {
 
     /** @see ScrollableContext.setHeaderProps */
     @action.bound
-    setHeaderProps(headerProps: React.HTMLProps<HTMLElement>) {
+    setHeaderProps(headerProps: HTMLMotionProps<"header">) {
         this.headerProps = headerProps;
     }
 
@@ -226,7 +227,7 @@ class ScrollableComponent extends React.Component<ScrollableProps> {
                 this.stickySpring.stop();
             }
             if (this.header.canDeploy) {
-                this.stickySpring = spring({...springPose.transition, from, to}).start((top: number) => {
+                this.stickySpring = spring({...springTransition, from, to}).start((top: number) => {
                     sticky.set({top});
                     this.setStickyRefs(top);
                     if (isIEorEdge()) {
@@ -266,7 +267,7 @@ class ScrollableComponent extends React.Component<ScrollableProps> {
                 to: Math.max(0, to(getOffsetTop(parentNode, this.scrollableNode)))
             };
             if (transition.from !== transition.to) {
-                spring({...springPose.transition, ...transition}).start((top: number) => {
+                spring({...springTransition, ...transition}).start((top: number) => {
                     stickyRef.set({
                         top
                     });
@@ -287,8 +288,30 @@ class ScrollableComponent extends React.Component<ScrollableProps> {
 
     setStickyHeader = (ref: HTMLElement | null) => (this.stickyHeader = ref);
 
+    HeaderComponent = () => {
+        const {Header = null, canDeploy = true} = this.header || {};
+        return useObserver(() => (
+            <AnimatePresence>
+                {Header && this.headerProps && this.isHeaderSticky ? (
+                    <Header
+                        {...this.headerProps}
+                        initial={canDeploy ? this.headerProps.initial : false}
+                        exit={canDeploy ? this.headerProps.exit : {display: "none"}}
+                        ref={this.setStickyHeader}
+                        style={{width: this.width}}
+                    />
+                ) : null}
+            </AnimatePresence>
+        ));
+    };
+
+    BTTComponent = () =>
+        useObserver(() => (
+            <AnimatePresence>{!this.props.hideBackToTop && this.hasBtt ? <ButtonBackToTop /> : null}</AnimatePresence>
+        ));
+
     render() {
-        const {children, className, hideBackToTop, innerRef} = this.props;
+        const {children, className, innerRef} = this.props;
         return (
             <ScrollableContext.Provider
                 value={{
@@ -310,30 +333,8 @@ class ScrollableComponent extends React.Component<ScrollableProps> {
                                 ref={div => div && (this.stickyNode = div)}
                                 style={{width: this.width}}
                             />
-                            <Observer>
-                                {() => {
-                                    const {Header = null} = this.header || {};
-                                    return (
-                                        <Transition>
-                                            {Header && this.headerProps && this.isHeaderSticky ? (
-                                                <Header
-                                                    {...this.headerProps}
-                                                    key="header"
-                                                    ref={this.setStickyHeader}
-                                                    style={{width: this.width}}
-                                                />
-                                            ) : (
-                                                undefined
-                                            )}
-                                            {!hideBackToTop && this.hasBtt ? (
-                                                <ButtonBackToTop key="back-to-top" />
-                                            ) : (
-                                                undefined
-                                            )}
-                                        </Transition>
-                                    );
-                                }}
-                            </Observer>
+                            <this.HeaderComponent />
+                            <this.BTTComponent />
                         </div>
                     )}
                 </Theme>

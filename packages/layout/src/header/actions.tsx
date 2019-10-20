@@ -1,7 +1,7 @@
+import {motion} from "framer-motion";
 import * as React from "react";
-import posed from "react-pose";
 
-import {CSSProp, defaultPose, getIcon, useTheme} from "@focus4/styling";
+import {CSSProp, defaultTransition, getIcon, useTheme} from "@focus4/styling";
 import {Button, ButtonMenu, ButtonProps, MenuItem, MenuItemProps, tooltipFactory, TooltipProps} from "@focus4/toolbox";
 const TooltipButton = tooltipFactory()(Button);
 
@@ -46,7 +46,20 @@ export function HeaderActions({
 }: HeaderActionsProps) {
     const theme = useTheme("header", headerCss, pTheme);
     return (
-        <PosedDiv className={theme.actions()}>
+        <motion.div
+            className={theme.actions()}
+            transition={defaultTransition}
+            variants={{
+                visible: {
+                    y: "0%",
+                    opacity: 1
+                },
+                hidden: {
+                    y: "-50%",
+                    opacity: 0.3
+                }
+            }}
+        >
             {primary.map((action, i) => {
                 const FinalButton = action.tooltip ? TooltipButton : Button;
                 return (
@@ -74,19 +87,6 @@ export function HeaderActions({
                     ))}
                 </ButtonMenu>
             ) : null}
-        </PosedDiv>
+        </motion.div>
     );
 }
-
-const PosedDiv = posed.div({
-    enter: {
-        y: "0%",
-        opacity: 1,
-        ...defaultPose
-    },
-    exit: {
-        y: "-50%",
-        opacity: 0.3,
-        ...defaultPose
-    }
-});

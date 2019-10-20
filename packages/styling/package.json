@@ -22,6 +22,7 @@
         "@types/css-modules-loader-core": "1.1.0",
         "classnames": "2.2.6",
         "css-modules-loader-core": "1.1.0",
+        "framer-motion": "1.8.4",
         "glob": "7.1.5",
         "material-design-icons-iconfont": "5.0.1",
         "mobx-react": "5.4.4",

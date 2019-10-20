@@ -1,12 +1,12 @@
+import {AnimatePresence, motion} from "framer-motion";
 import i18next from "i18next";
 import {reduce} from "lodash";
 import {action, IReactionDisposer, observable, reaction} from "mobx";
 import {disposeOnUnmount, observer} from "mobx-react";
 import * as React from "react";
-import posed, {Transition} from "react-pose";
 
 import {isList, isSearch, ListStoreBase} from "@focus4/stores";
-import {CSSProp, defaultPose, getIcon, themr, ToBem} from "@focus4/styling";
+import {CSSProp, defaultTransition, getIcon, themr, ToBem} from "@focus4/styling";
 import {Button, ButtonMenu, ChipTheme, IconButton, Input, MenuItem} from "@focus4/toolbox";
 
 import {ChipType, FacetBox, shouldDisplayFacet} from "../search";
@@ -294,9 +294,15 @@ export class ActionBar<T> extends React.Component<ActionBarProps<T>> {
                         {/* FacetBox */}
                         {hasFacetBox && isSearch(store) ? (
                             <div className={theme.facetBoxContainer()}>
-                                <Transition>
+                                <AnimatePresence>
                                     {this.displayFacetBox && (
-                                        <PanningDiv key="facet-box">
+                                        <motion.div
+                                            key="facet-box"
+                                            initial={{height: 0}}
+                                            animate={{height: "auto"}}
+                                            exit={{height: 0}}
+                                            transition={defaultTransition}
+                                        >
                                             <IconButton
                                                 icon={getIcon(`${i18nPrefix}.icons.actionBar.close`)}
                                                 onClick={() => (this.displayFacetBox = false)}
@@ -309,9 +315,9 @@ export class ActionBar<T> extends React.Component<ActionBarProps<T>> {
                                                 store={store}
                                                 theme={{facetBox: theme.facetBox()}}
                                             />
-                                        </PanningDiv>
+                                        </motion.div>
                                     )}
-                                </Transition>
+                                </AnimatePresence>
                             </div>
                         ) : null}
                     </div>
@@ -328,14 +334,3 @@ export class ActionBar<T> extends React.Component<ActionBarProps<T>> {
 export function actionBarFor<T>(props: ActionBarProps<T>) {
     return <ActionBar {...props} />;
 }
-
-const PanningDiv = posed.div({
-    exit: {
-        height: 0,
-        ...defaultPose
-    },
-    enter: {
-        height: "auto",
-        ...defaultPose
-    }
-});

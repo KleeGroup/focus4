@@ -9,13 +9,19 @@ export const ease = animationTimingFunction.startsWith("cubic-bezier")
           .map(parseFloat)
     : undefined;
 
-export const defaultPose = {
-    delay,
-    transition: {type: "tween", duration, ease}
+export const defaultTransition = {
+    delay: delay / 1000,
+    type: "tween",
+    duration: duration / 1000,
+    ease
 } as const;
 
-export const springPose = {
-    transition: {type: "spring", stiffness: 170, damping: 26, restDelta: 1, restSpeed: 1000}
+export const springTransition = {
+    type: "spring",
+    stiffness: 170,
+    damping: 26,
+    restDelta: 1,
+    restSpeed: 1000
 } as const;
 
 export function cssTransitionProps({

@@ -40,6 +40,7 @@ export default (async () => {
             "classnames",
             "i18next",
             "lodash",
+            "framer-motion",
             "mobx",
             "mobx-react",
             "mobx-react-lite",
@@ -47,7 +48,6 @@ export default (async () => {
             "popmotion",
             "react",
             "react-dom",
-            "react-pose",
             "stylefire",
             "tslib"
         ],

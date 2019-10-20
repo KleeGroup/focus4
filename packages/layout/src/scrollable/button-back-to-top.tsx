@@ -1,8 +1,8 @@
 import scroll from "smoothscroll-polyfill";
 scroll.polyfill();
 
+import {motion} from "framer-motion";
 import * as React from "react";
-import posed from "react-pose";
 
 import {CSSProp, ScrollableContext, useTheme} from "@focus4/styling";
 import {Button, ButtonTheme} from "@focus4/toolbox";
@@ -18,28 +18,23 @@ export interface ButtonBackToTopProps {
 }
 
 /** Bouton de retour en haut de page. */
-export const ButtonBackToTop = posed(
-    React.forwardRef<HTMLDivElement, ButtonBackToTopProps>(({theme: pTheme}, ref) => {
-        const {backToTop, ...theme} = useTheme<ButtonBttCss>("buttonBTT", buttonBttCss, pTheme);
-        const scrollable = React.useContext(ScrollableContext);
+export function ButtonBackToTop({theme: pTheme}: ButtonBackToTopProps) {
+    const {backToTop, ...theme} = useTheme<ButtonBttCss>("buttonBTT", buttonBttCss, pTheme);
+    const scrollable = React.useContext(ScrollableContext);
 
-        return (
-            <div className={backToTop()} ref={ref}>
-                <Button
-                    accent
-                    onClick={() =>
-                        scrollable.scrollTo({
-                            top: 0
-                        })
-                    }
-                    icon="expand_less"
-                    floating
-                    theme={theme}
-                />
-            </div>
-        );
-    })
-)({
-    enter: {scale: 1},
-    exit: {scale: 0}
-});
+    return (
+        <motion.div className={backToTop()} initial={{scale: 0}} animate={{scale: 1}} exit={{scale: 0}}>
+            <Button
+                accent
+                onClick={() =>
+                    scrollable.scrollTo({
+                        top: 0
+                    })
+                }
+                icon="expand_less"
+                floating
+                theme={theme}
+            />
+        </motion.div>
+    );
+}
