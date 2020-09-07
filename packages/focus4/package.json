@@ -1,6 +1,6 @@
 {
     "name": "focus4",
-    "version": "10.6.0-beta.2",
+    "version": "10.6.0-beta.3",
     "description": "Focus v4, all modules",
     "main": "index.js",
     "repository": {
@@ -15,12 +15,12 @@
         "start": "tsc --watch"
     },
     "dependencies": {
-        "@focus4/collections": "^10.6.0-beta.2",
-        "@focus4/core": "^10.6.0-beta.2",
-        "@focus4/forms": "^10.6.0-beta.2",
-        "@focus4/layout": "^10.6.0-beta.2",
-        "@focus4/stores": "^10.6.0-beta.2",
-        "@focus4/styling": "^10.6.0-beta.2",
-        "@focus4/toolbox": "^10.6.0-beta.2"
+        "@focus4/collections": "^10.6.0-beta.3",
+        "@focus4/core": "^10.6.0-beta.3",
+        "@focus4/forms": "^10.6.0-beta.3",
+        "@focus4/layout": "^10.6.0-beta.3",
+        "@focus4/stores": "^10.6.0-beta.3",
+        "@focus4/styling": "^10.6.0-beta.3",
+        "@focus4/toolbox": "^10.6.0-beta.3"
     }
 }

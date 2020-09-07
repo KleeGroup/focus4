@@ -1,6 +1,6 @@
 {
     "name": "@focus4/stores",
-    "version": "10.6.0-beta.2",
+    "version": "10.6.0-beta.3",
     "description": "Focus v4, stores module",
     "main": "lib/focus4.stores.js",
     "repository": {
@@ -17,7 +17,7 @@
         "test-ci": "jest --ci --reporters=default --reporters=jest-junit"
     },
     "dependencies": {
-        "@focus4/core": "^10.6.0-beta.2",
+        "@focus4/core": "^10.6.0-beta.3",
         "moment": "2.27.0"
     },
     "devDependencies": {
