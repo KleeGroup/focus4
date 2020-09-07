@@ -27,7 +27,9 @@ export type UrlPathDescriptor<C> = C extends ParamDef<infer _0, Param<infer T>, 
           : UrlPathDescriptor<C[K]>;
 
 /** Router correspondant à la config donnée. */
-export type Router<C> = ParamObject<C> & {
+export interface Router<C> {
+    /** Etat du routeur. */
+    state: ParamObject<C>;
     /**
      * Vérifie si la section de route demandée est active dans le routeur.
      * @param predicate Callback décrivant la route.
@@ -55,7 +57,7 @@ export type Router<C> = ParamObject<C> & {
     ): T;
     /** Lance le routeur. */
     start(): Promise<void>;
-};
+}
 
 /** Builder pour construire des contraintes sur les routes d'un routeur. */
 export interface RouterConstraintBuilder<C> {
@@ -150,13 +152,14 @@ export function makeRouter<C>(config: C, _builder?: (b: RouterConstraintBuilder<
         return object;
     }
 
-    const store = (extendObservable(buildObject(config), {_activeRoute: "/", _activeParams: []}) as any) as Router<
-        C
-    > & {
+    const store = (extendObservable(
+        {state: buildObject(config)},
+        {_activeRoute: "/", _activeParams: []}
+    ) as any) as Router<C> & {
         _activeRoute: string;
         _activeParams: Record<string, string>;
     };
-    const paramsMap = buildParamsMap(config, store);
+    const paramsMap = buildParamsMap(config, store.state);
     const router = new YesterRouter(
         [
             // Spécifie tous les endpoints dans le routeur.
@@ -193,12 +196,71 @@ export function makeRouter<C>(config: C, _builder?: (b: RouterConstraintBuilder<
         {type: "hash"}
     );
 
-    store.is = () => true;
-    store.to = () => {
-        /** */
-    };
-    store.switch = () => undefined as any;
-    store.sub = () => store as any;
+    function is(route: string, predicate: (x: UrlRouteDescriptor<C>) => void) {
+        const builder = (path: string) => {
+            route += `/${Object.keys(paramsMap).includes(path) ? `:${path}` : path}`;
+            return builder;
+        };
+        predicate(builder as any);
+        return store._activeRoute.startsWith(route);
+    }
+
+    function to(route: string, predicate: (x: UrlPathDescriptor<C>) => void) {
+        const builder = (path: string) => {
+            route += `/${path}`;
+            return builder;
+        };
+        predicate(builder as any);
+        router.navigate(route);
+    }
+
+    function sw(route: string, predicate: (x: UrlRouteDescriptor<C>) => void, switcher: (x: any) => any) {
+        const builder = (path: string) => {
+            route += `/${Object.keys(paramsMap).includes(path) ? `:${path}` : path}`;
+            return builder;
+        };
+        predicate(builder as any);
+        if (!store._activeRoute.startsWith(route)) {
+            return switcher(undefined);
+        } else {
+            return switcher(store._activeRoute.replace(route, "").split("/")[1]?.replace(":", "") as any);
+        }
+    }
+
+    function sub(route: string, predicate: (x: UrlRouteDescriptor<C>) => void): any {
+        let state = store.state;
+        const builder = (path: string) => {
+            const isParam = Object.keys(paramsMap).includes(path);
+            route += `/${isParam ? `:${path}` : path}`;
+            if (!isParam) {
+                state = (state as any)[path];
+            }
+            return builder;
+        };
+        predicate(builder as any);
+
+        return {
+            state,
+            is: (p: any) => is(route, p),
+            to: (p: any) => {
+                let baseRoute = route;
+                for (const param in store._activeParams) {
+                    baseRoute = baseRoute.replace(`:${param}`, store._activeParams[param]);
+                }
+                to(baseRoute, p);
+            },
+            switch: (p: any, s: any) => sw(route, p, s),
+            sub: (p: any) => sub(route, p),
+            start: () => {
+                /** */
+            }
+        };
+    }
+
+    store.is = p => is("", p);
+    store.to = p => to("", p);
+    store.switch = (p, s) => sw("", p, s);
+    store.sub = p => sub("", p);
     store.start = router.init.bind(router) as () => Promise<void>;
 
     return store;

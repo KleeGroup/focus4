@@ -34,6 +34,8 @@ const router = makeRouter({
     })
 });
 
+router.start();
+
 /*
     La liste des routes possibles pour cette définition est donc :
     '/'
@@ -54,12 +56,12 @@ const router = makeRouter({
     toutes les valeurs des différents paramètres qui ont été définis.
 */
 
-router.operation.ofaId = 2;
-router.operation.garantie.gfaId = 1;
-router.operation.echeance.echId = 1;
-router.operation.echeance.reglement.regId = 1;
-router.operation.tam.ttaCode = "COURANT";
-router.operation.tam.mprId = 3;
+router.state.operation.ofaId = 2;
+router.state.operation.garantie.gfaId = 1;
+router.state.operation.echeance.echId = 1;
+router.state.operation.echeance.reglement.regId = 1;
+router.state.operation.tam.ttaCode = "COURANT";
+router.state.operation.tam.mprId = 3;
 
 /*
     Contrairement au routeur actuel, modifier les valeurs NE NAVIGUE PAS. Et de par sa construction,
@@ -94,6 +96,7 @@ router.is(a => a("operation")("ofaId")("echeance")("echId")("reglement")("regId"
     de route qui matche :
 */
 
+// @ts-ignore
 const value = router.switch(
     a => a("operation")("ofaId"),
     route => {
@@ -150,13 +153,13 @@ router.sub(a => a("operation")("ofaId")).to(a => a("garantie")(4));
 
 const tamRouter = router.sub(a => a("operation")("ofaId")("tam"));
 tamRouter.to(a => a("COURANT")(4));
-tamRouter.ttaCode = "THEORIQUE";
-tamRouter.mprId = 5;
+tamRouter.state.ttaCode = "THEORIQUE";
+tamRouter.state.mprId = 5;
 
 const echRouter: Router<typeof echeance> = router.sub(a => a("operation")("ofaId")("echeance"));
 echRouter.to(a => a(3)("reglement")(4));
-echRouter.echId = 8;
-echRouter.reglement.regId = 1;
+echRouter.state.echId = 8;
+echRouter.state.reglement.regId = 1;
 
 /*
     Comme vu dans l'exemple précédant, on peut facilement typer un routeur avec "Router<typeof config>",
@@ -180,7 +183,7 @@ echRouter.reglement.regId = 1;
     ou de redirection sur certaines routes si une condition n'est pas respectée :
 */
 
-const router2 = makeRouter(
+makeRouter(
     {
         projet: {
             detail: {}
